@@ -1,1 +1,3 @@
 export const NATS_SERVICE = 'NATS_SERVICE';
+export const USER_SERVICE = 'USER_SERVICE';
+export const ELECTION_SERVICE = 'ELECTION_SERVICE';
