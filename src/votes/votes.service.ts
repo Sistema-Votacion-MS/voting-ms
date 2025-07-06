@@ -48,9 +48,11 @@ export class VotesService extends PrismaClient implements OnModuleInit {
         throw error;
       }
 
+      this.logger.error('Error creating vote:', error);
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to create vote. Please verify election and candidate exist and try again.',
+        error: 'Vote Creation Failed'
       });
     }
   }
@@ -60,31 +62,40 @@ export class VotesService extends PrismaClient implements OnModuleInit {
       this.logger.log('Fetching all votes');
       return await this.votes.findMany();
     } catch (error) {
+      this.logger.error('Error fetching votes:', error);
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to retrieve votes. Please try again later.',
+        error: 'Database Error'
       });
     }
   }
 
   async findOne(id: string) {
     try {
-      const voter = await this.votes.findUnique({
+      const vote = await this.votes.findUnique({
         where: { id: id },
       });
 
-      if (!voter) {
+      if (!vote) {
         throw new RpcException({
           status: HttpStatus.NOT_FOUND,
-          message: `Voter not found with id ${id}`,
+          message: `Vote not found with id ${id}`,
+          error: 'Vote Not Found'
         });
       }
 
-      return voter;
+      return vote;
     } catch (error) {
+      if (error instanceof RpcException) {
+        throw error;
+      }
+
+      this.logger.error(`Error finding vote with id ${id}:`, error);
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to retrieve vote. Please verify the ID and try again.',
+        error: 'Database Error'
       });
     }
   }

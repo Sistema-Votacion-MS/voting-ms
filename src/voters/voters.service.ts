@@ -38,9 +38,11 @@ export class VotersService extends PrismaClient implements OnModuleInit {
         throw error;
       }
 
+      this.logger.error('Error creating voter record:', error);
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to register voter. Please verify election exists and try again.',
+        error: 'Voter Registration Failed'
       });
     }
   }
@@ -64,9 +66,15 @@ export class VotersService extends PrismaClient implements OnModuleInit {
 
       return voter;
     } catch (error) {
+      if (error instanceof RpcException) {
+        throw error;
+      }
+
+      this.logger.error(`Error verifying voter for election ${election_id} and user ${user_id}:`, error);
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to verify voter status. Please try again.',
+        error: 'Voter Verification Failed'
       });
     }
   }
