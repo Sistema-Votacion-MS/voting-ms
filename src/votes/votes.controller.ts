@@ -13,7 +13,8 @@ export class VotesController {
   }
 
   @MessagePattern({ cmd: 'votes_find_all' })
-  findAll() {
+  findAll(@Payload() paginationDto: any) {
+    console.log('Pagination DTO:', paginationDto);
     return this.votesService.findAll();
   }
 

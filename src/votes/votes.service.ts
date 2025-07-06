@@ -49,6 +49,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
 
   async findAll() {
     try {
+      this.logger.log('Fetching all votes');
       return await this.votes.findMany();
     } catch (error) {
       throw new RpcException({
