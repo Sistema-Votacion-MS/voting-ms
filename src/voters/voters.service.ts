@@ -16,7 +16,14 @@ export class VotersService extends PrismaClient implements OnModuleInit {
     try {
       const { election_id, user_id } = createVoterDto;
 
-      await this.verifyVoter(election_id, user_id);
+      const existing = await this.verifyVoter(election_id, user_id);
+
+      if (existing) {
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: `User ${user_id} has already voted in election ${election_id}`,
+        });
+      }
 
       return await this.voters.create({
         data: {
