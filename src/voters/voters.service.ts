@@ -1,15 +1,54 @@
-import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { PrismaClient } from 'generated/prisma';
 import { CreateVoterDto } from './dto/create-voter.dto';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
+import { USER_SERVICE, ELECTION_SERVICE } from 'src/config/services';
 
 @Injectable()
 export class VotersService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger('VotersService');
 
+  constructor(
+    @Inject(USER_SERVICE) private readonly userClient: ClientProxy,
+    @Inject(ELECTION_SERVICE) private readonly electionClient: ClientProxy,
+  ) {
+    super();
+  }
+
   async onModuleInit() {
     await this.$connect();
     this.logger.log('Database connected');
+  }
+
+  async verifyUserExists(user_id: string): Promise<boolean> {
+    this.logger.debug(`[verifyUserExists] Checking if user ${user_id} exists in users-ms`);
+
+    try {
+      await firstValueFrom(
+        this.userClient.send({ cmd: 'user_find_one' }, { id: user_id })
+      );
+      this.logger.debug(`[verifyUserExists] User ${user_id} exists in users-ms`);
+      return true;
+    } catch (error) {
+      this.logger.warn(`[verifyUserExists] User ${user_id} not found in users-ms:`, error);
+      return false;
+    }
+  }
+
+  async verifyElectionExists(election_id: string): Promise<boolean> {
+    this.logger.debug(`[verifyElectionExists] Checking if election ${election_id} exists in election-ms`);
+
+    try {
+      await firstValueFrom(
+        this.electionClient.send({ cmd: 'election_find_one' }, { id: election_id })
+      );
+      this.logger.debug(`[verifyElectionExists] Election ${election_id} exists in election-ms`);
+      return true;
+    } catch (error) {
+      this.logger.warn(`[verifyElectionExists] Election ${election_id} not found in election-ms:`, error);
+      return false;
+    }
   }
 
   async createVoter(createVoterDto: CreateVoterDto) {
@@ -18,6 +57,31 @@ export class VotersService extends PrismaClient implements OnModuleInit {
     try {
       const { election_id, user_id } = createVoterDto;
 
+      // 1. Verificar que el usuario existe en users-ms
+      this.logger.debug(`[createVoter] Verifying user ${user_id} exists in users-ms`);
+      const userExists = await this.verifyUserExists(user_id);
+      if (!userExists) {
+        this.logger.warn(`[createVoter] User ${user_id} not found in users-ms`);
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: `User ${user_id} not found`,
+          error: 'User Not Found'
+        });
+      }
+
+      // 2. Verificar que la elección existe en election-ms
+      this.logger.debug(`[createVoter] Verifying election ${election_id} exists in election-ms`);
+      const electionExists = await this.verifyElectionExists(election_id);
+      if (!electionExists) {
+        this.logger.warn(`[createVoter] Election ${election_id} not found in election-ms`);
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: `Election ${election_id} not found`,
+          error: 'Election Not Found'
+        });
+      }
+
+      // 3. Verificar si el usuario ya votó
       this.logger.debug(`[createVoter] Checking if user ${user_id} has already voted in election ${election_id}`);
       const existing = await this.verifyVoter(election_id, user_id);
 
@@ -30,6 +94,7 @@ export class VotersService extends PrismaClient implements OnModuleInit {
         });
       }
 
+      // 4. Crear el registro de votante
       this.logger.debug(`[createVoter] Creating voter record with has_voted: true`);
       const newVoter = await this.voters.create({
         data: {
