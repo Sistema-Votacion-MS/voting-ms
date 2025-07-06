@@ -41,7 +41,7 @@ export class VotersService extends PrismaClient implements OnModuleInit {
 
     try {
       await firstValueFrom(
-        this.electionClient.send({ cmd: 'election_find_one' }, { id: election_id })
+        this.electionClient.send({ cmd: 'election_find_one' }, election_id)
       );
       this.logger.debug(`[verifyElectionExists] Election ${election_id} exists in election-ms`);
       return true;

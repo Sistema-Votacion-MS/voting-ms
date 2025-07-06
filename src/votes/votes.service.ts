@@ -29,7 +29,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
 
     try {
       await firstValueFrom(
-        this.electionClient.send({ cmd: 'candidate_find_one' }, { id: candidate_id })
+        this.electionClient.send({ cmd: 'candidate_find_one' }, candidate_id)
       );
       this.logger.debug(`[verifyCandidateExists] Candidate ${candidate_id} exists in election-ms`);
       return true;
@@ -59,7 +59,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
 
     try {
       await firstValueFrom(
-        this.electionClient.send({ cmd: 'election_find_one' }, { id: election_id })
+        this.electionClient.send({ cmd: 'election_find_one' }, election_id)
       );
       this.logger.debug(`[verifyElectionExists] Election ${election_id} exists in election-ms`);
       return true;
