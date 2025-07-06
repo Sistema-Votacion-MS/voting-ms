@@ -14,7 +14,7 @@ export class VotersService extends PrismaClient implements OnModuleInit {
 
   async createVoter(createVoterDto: CreateVoterDto) {
     this.logger.log(`[createVoter] Starting voter registration for user ${createVoterDto.user_id} in election ${createVoterDto.election_id}`);
-    
+
     try {
       const { election_id, user_id } = createVoterDto;
 
@@ -58,7 +58,7 @@ export class VotersService extends PrismaClient implements OnModuleInit {
 
   async verifyVoter(election_id: string, user_id: string) {
     this.logger.debug(`[verifyVoter] Checking if user ${user_id} has already voted in election ${election_id}`);
-    
+
     try {
       const voter = await this.voters.findFirst({
         where: {
@@ -79,7 +79,7 @@ export class VotersService extends PrismaClient implements OnModuleInit {
       if (error instanceof RpcException) {
         throw error;
       }
-      
+
       this.logger.error(`[verifyVoter] Error verifying voter for election ${election_id} and user ${user_id}:`, error);
       throw new RpcException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,

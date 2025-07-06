@@ -20,7 +20,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
 
   async createVotes(createVotesDto: CreateVotesDto) {
     this.logger.log(`[createVotes] Starting vote creation for user ${createVotesDto.user_id} in election ${createVotesDto.election_id}`);
-    
+
     try {
       const { election_id, candidate_id, user_id } = createVotesDto;
 
@@ -72,11 +72,11 @@ export class VotesService extends PrismaClient implements OnModuleInit {
   async findAll() {
     this.logger.log('[findAll] Starting to fetch all votes');
     const startTime = Date.now();
-    
+
     try {
       const votes = await this.votes.findMany();
       const duration = Date.now() - startTime;
-      
+
       this.logger.log(`[findAll] Successfully fetched ${votes.length} votes in ${duration}ms`);
       return votes;
     } catch (error) {
@@ -90,7 +90,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
   }
   async findOne(id: string) {
     this.logger.log(`[findOne] Searching for vote with ID: ${id}`);
-    
+
     try {
       this.logger.debug(`[findOne] Querying database for vote with ID: ${id}`);
       const vote = await this.votes.findUnique({
@@ -112,7 +112,7 @@ export class VotesService extends PrismaClient implements OnModuleInit {
       if (error instanceof RpcException) {
         throw error;
       }
-      
+
       this.logger.error(`[findOne] Error finding vote with id ${id}:`, error);
       throw new RpcException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
