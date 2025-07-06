@@ -19,7 +19,9 @@ export class VotesController {
   }
 
   @MessagePattern({ cmd: 'votes_find_one' })
-  findOne(@Payload('id') id: string) {
+  findOne(@Payload() payload: string | { id: string }) {
+    // Manejar tanto string directo como objeto con id
+    const id = typeof payload === 'string' ? payload : payload.id;
     return this.votesService.findOne(id);
   }
 }
