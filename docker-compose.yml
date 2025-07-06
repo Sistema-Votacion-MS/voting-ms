@@ -1,0 +1,12 @@
+services:
+  voting-db:
+    container_name: voting_database
+    image: postgres
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - 5460:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=voting_password123
+      - POSTGRES_DB=voting_db
