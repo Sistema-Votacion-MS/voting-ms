@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { VotesModule } from './votes/votes.module';
+import { VotersModule } from './voters/voters.module';
 @Module({
-  imports: [],
+  imports: [VotesModule, VotersModule],
   controllers: [],
   providers: [],
 })
